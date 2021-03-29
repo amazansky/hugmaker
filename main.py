@@ -1,7 +1,16 @@
 import cv2 as cv
+from discord.ext import commands
+from discord import File
 import numpy as np
+import yaml
 
-img = cv.imread('images/hug.png')
+# define yaml opening function to read config file
+def read_yaml(path):
+    with open(path, 'r') as f:
+        return yaml.safe_load(f)
+
+# get bot token from config file
+token = read_yaml('config.yml')['BOT_TOKEN']
 
 # flag colors use BGR for consistency with OpenCV
 flags = {
@@ -22,51 +31,63 @@ flags = {
     'trans': [(250, 206, 91), (184, 169, 245), (255, 255, 255), (184, 169, 245), (250, 206, 91)]
 }
 
-# make a mask for each of the people in the hug
-lightblue = np.array([238, 172, 85], dtype = 'uint16')
-darkblue = np.array([153, 102, 34], dtype = 'uint16')
+# define the color for each of the people in the hug
+lightblue = np.array([238, 172, 85, 255], dtype = 'uint16')
+darkblue = np.array([153, 102, 34, 255], dtype = 'uint16')
 
-mask1 = cv.inRange(img, darkblue, darkblue)
-mask2 = cv.inRange(img, lightblue, lightblue)
+# start the bot
+bot = commands.Bot(command_prefix='$')
 
-# change these to whatever flags you want from the list above
-selected1 = 'pride'
-selected2 = 'pride'
+@bot.command()
+async def hug(ctx, p1, p2):
 
-# define a rotate function to rotate the right flag
-def rotate(img, angle, scale=1.0, rotPoint=None):
-    (height,width) = img.shape[:2]
+    img = cv.imread('images/hug_2048.png', cv.IMREAD_UNCHANGED)
 
-    if rotPoint is None:
-        rotPoint = (width // 2, height // 2)
-    
-    rotMat = cv.getRotationMatrix2D(rotPoint, angle, scale)
-    dimensions = (width, height)
+    mask1 = cv.inRange(img, darkblue, darkblue)
+    mask2 = cv.inRange(img, lightblue, lightblue)
 
-    return cv.warpAffine(img, rotMat, dimensions)
+    # define a rotate function to rotate the right flag
+    def rotate(img, angle, scale=1.0, rotPoint=None):
+        (height,width) = img.shape[:2]
+        if rotPoint is None:
+            rotPoint = (width // 2, height // 2)
+        rotMat = cv.getRotationMatrix2D(rotPoint, angle, scale)
+        dimensions = (width, height)
+        return cv.warpAffine(img, rotMat, dimensions)
 
-# create each flag from its corresponding colors
-flag1 = np.zeros((img.shape[0], img.shape[1], 3), dtype='uint8')
-colors1 = flags[selected1]
-print(len(colors1))
-for i, color in enumerate(colors1):
-    cv.rectangle(flag1, (0, i*img.shape[1] // len(colors1)), (img.shape[1], (i+1) * img.shape[1] // len(colors1)), color, -1)
+    # create each flag from its corresponding colors
+    flag1 = np.zeros((img.shape[0], img.shape[1], 4), dtype='uint8')
+    colors1 = flags[p1]
+    for i, color in enumerate(colors1):
+        # darken left person if the flags are the same
+        if p1 == p2:
+            color = [int(c*0.8) for c in color]
+        else:
+            color = list(color)
+        color.append(255)
+        color = tuple(color)
+        cv.rectangle(flag1, (0, i*img.shape[1] // len(colors1)), (img.shape[1], (i+1) * img.shape[1] // len(colors1)), color, -1)
 
-flag2 = np.zeros((img.shape[0], img.shape[1], 3), dtype='uint8')
-colors2 = flags[selected2]
-for i, color in enumerate(colors2):
-    cv.rectangle(flag2, (0, i*img.shape[1] // len(colors2)), (img.shape[1], (i+1) * img.shape[1] // len(colors2)), color, -1)
-flag2 = rotate(flag2, 5, 1.1)
+    flag2 = np.zeros((img.shape[0], img.shape[1], 4), dtype='uint8')
+    colors2 = flags[p2]
+    for i, color in enumerate(colors2):
+        color = list(color)
+        color.append(255)
+        color = tuple(color)
+        cv.rectangle(flag2, (0, i*img.shape[1] // len(colors2)), (img.shape[1], (i+1) * img.shape[1] // len(colors2)), color, -1)
+    flag2 = rotate(flag2, 5, 1.1)
 
-# use the people as masks for the flags
-person1 = cv.bitwise_and(flag1, flag1, mask=mask1)
-# blurred1 = cv.GaussianBlur(person1, (5, 5), cv.BORDER_DEFAULT)
-person2 = cv.bitwise_and(flag2, flag2, mask=mask2)
-# blurred2 = cv.GaussianBlur(person2, (5, 5), cv.BORDER_DEFAULT)
+    # use the people as masks for the flags
+    person1 = cv.bitwise_and(flag1, flag1, mask=mask1)
+    person2 = cv.bitwise_and(flag2, flag2, mask=mask2)
 
-people = cv.bitwise_or(person1, person2)
-# people = cv.bitwise_or(blurred1, blurred2)
+    people = cv.bitwise_or(person1, person2)
 
-cv.imshow('final', people)
+    # downscale for anti-aliasing. INTER_AREA worked the best out of the methods I tried.
+    resized = cv.resize(people, (512, 512), interpolation=cv.INTER_AREA)
 
-cv.waitKey(0)
+    cv.imwrite('output/hug.png', resized)
+
+    await ctx.send(file=File('output/hug.png'))
+
+bot.run(token)
