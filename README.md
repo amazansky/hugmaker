@@ -12,22 +12,22 @@ A Discord bot to make custom hug emotes with pride flag colors.
 ## Usage
 The bot's current prefix is `$`. You can change this in the `main.py` file if you so desire.
 
-To use the bot, type `$hug <flag1> <flag2>`, replacing `<hug1>` and `<hug2>` with any of the following currently supported flags:
-- ace
+To use the bot, type `$hug <flag1> <flag2>`, replacing `<flag1>` and `<flag2>` with any of the following currently supported flags:
+- asexual (alias: ace)
 - agender
-- aro
-- bi
+- aromantic (alias: aro)
+- bisexual (alias: bi)
 - bigender
-- enby
 - gay
 - genderfluid
 - genderqueer
 - lesbian
-- omni
-- pan
-- poly
+- nonbinary (aliases: enby, nb)
+- omnisexual (alias: omni)
+- pansexual (alias: pan)
+- polysexual (alias: poly)
 - pride
-- trans
+- transgender (alias: trans)
 
 It's also pretty easy to add more flags within `main.py` if you'd like, as long as they are striped.
 
