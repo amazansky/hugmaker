@@ -1,3 +1,4 @@
 .venv/
 output/
 config.yml
+__pycache__/

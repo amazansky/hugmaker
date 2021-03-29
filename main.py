@@ -1,7 +1,8 @@
 import cv2 as cv
 from discord.ext import commands
-from discord import File
+import discord
 import numpy as np
+from random import choice
 import yaml
 
 # define yaml opening function to read config file
@@ -13,7 +14,7 @@ def read_yaml(path):
 token = read_yaml('config.yml')['BOT_TOKEN']
 
 # flag colors use BGR (not RGB!) for consistency with OpenCV
-flags = {
+flagdict = {
     'asexual': [(0, 0, 0), (163, 163, 163), (255, 255, 255), (128, 0, 128)],
     'agender': [(0, 0, 0), (185, 185, 185), (255, 255, 255), (131, 244, 184), (255, 255, 255), (185, 185, 185), (0, 0, 0)],
     'aromantic': [(66, 165, 61), (121, 211, 167), (255, 255, 255), (169, 169, 169), (0, 0, 0)],
@@ -48,6 +49,7 @@ darkblue = np.array([153, 102, 34, 255], dtype = 'uint16')
 
 # start the bot
 bot = commands.Bot(command_prefix='$')
+bot.remove_command('help')
 
 @bot.command()
 async def hug(ctx, p1, p2):
@@ -60,18 +62,17 @@ async def hug(ctx, p1, p2):
     mask1 = cv.inRange(img, darkblue, darkblue)
     mask2 = cv.inRange(img, lightblue, lightblue)
 
-    # define a rotate function to rotate the right flag
-    def rotate(img, angle, scale=1.0, rotPoint=None):
+    # define a rotate function to rotate the flag for person 2
+    def rotate(img, angle, scale=1.0):
         (height,width) = img.shape[:2]
-        if rotPoint is None:
-            rotPoint = (width // 2, height // 2)
-        rotMat = cv.getRotationMatrix2D(rotPoint, angle, scale)
+        point = (width // 2, height // 2)
+        matrix = cv.getRotationMatrix2D(point, angle, scale)
         dimensions = (width, height)
-        return cv.warpAffine(img, rotMat, dimensions)
+        return cv.warpAffine(img, matrix, dimensions)
 
     # create each flag from its corresponding colors
     flag1 = np.zeros((img.shape[0], img.shape[1], 4), dtype='uint8')
-    colors1 = flags[p1]
+    colors1 = flagdict[p1]
     for i, color in enumerate(colors1):
         # darken left person if the flags are the same
         if p1 == p2:
@@ -83,7 +84,7 @@ async def hug(ctx, p1, p2):
         cv.rectangle(flag1, (0, i*img.shape[1] // len(colors1)), (img.shape[1], (i+1) * img.shape[1] // len(colors1)), color, -1)
 
     flag2 = np.zeros((img.shape[0], img.shape[1], 4), dtype='uint8')
-    colors2 = flags[p2]
+    colors2 = flagdict[p2]
     for i, color in enumerate(colors2):
         color = list(color)
         color.append(255)
@@ -102,6 +103,27 @@ async def hug(ctx, p1, p2):
 
     cv.imwrite('output/hug.png', resized)
 
-    await ctx.send(file=File('output/hug.png'))
+    await ctx.send(file=discord.File('output/hug.png'))
+
+@bot.group(invoke_without_command=True)
+async def help(ctx):
+    em = discord.Embed(title='Help', description='Use $help <command> for more information about specific commands.', color=ctx.author.color)
+    em.add_field(name='Emotes in channel', value='hug')
+    em.add_field(name='Bot info', value='flags')
+    await ctx.send(embed = em)
+
+@help.command()
+async def flags(ctx):
+    abbr, full = choice(list(aliases.items()))
+    em = discord.Embed(title='Pride flags', description='This is the full list of flags supported by the bot. Shortened names also work (e.g. \"%s\" for \"%s\").' % (abbr, full))
+    em.add_field(name='Full list', value=', '.join(flagdict))
+    await ctx.send(embed = em)
+
+@help.command()
+async def hug(ctx):
+    em = discord.Embed(title='Hug', description='Sends a hug emote where the people are pride flags')
+    em.add_field(name='Syntax', value='$hug `flag1` `flag2`')
+    em.add_field(name='Parameters', value='`flag1` and `flag2` should be replaced by the names of pride flags. *(Run `$help flags` for a full list.)*')
+    await ctx.send(embed = em)
 
 bot.run(token)
