@@ -1,1 +1,9 @@
 BOT_TOKEN: YOUR_TOKEN_HERE
+
+PREFIX: $
+
+MUSIC: # List of music you want the bot to have in its status (format: "Listening to ___")
+  - My mixtape
+
+BOT_OPS: # List of Discord user IDs of your trusted bot operators
+  - 

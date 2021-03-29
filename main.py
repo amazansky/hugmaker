@@ -5,40 +5,51 @@ import numpy as np
 from random import choice
 import yaml
 
-# define yaml opening function to read config file
-def read_yaml(path):
-    with open(path, 'r') as f:
-        return yaml.safe_load(f)
+# access config file
+with open('example.config.yml', 'r') as f:
+    config = yaml.safe_load(f)
 
-# get bot token from config file
-token = read_yaml('config.yml')['BOT_TOKEN']
+token = config['BOT_TOKEN']
 
 # flag colors use BGR (not RGB!) for consistency with OpenCV
 flagdict = {
+    'abrosexual': [(149, 202, 119), (202, 228, 181), (255, 255, 255), (181, 150, 230), (110, 70, 216)],
     'asexual': [(0, 0, 0), (163, 163, 163), (255, 255, 255), (128, 0, 128)],
     'agender': [(0, 0, 0), (185, 185, 185), (255, 255, 255), (131, 244, 184), (255, 255, 255), (185, 185, 185), (0, 0, 0)],
     'aromantic': [(66, 165, 61), (121, 211, 167), (255, 255, 255), (169, 169, 169), (0, 0, 0)],
-    'bisexual': [(112, 2, 214), (112, 2, 214), (150, 79, 155), (168, 56, 0), (168, 56, 0)],
     'bigender': [(157, 122, 193), (200, 165, 234), (229, 198, 212), (255, 255, 255), (229, 198, 212), (230, 198, 155), (203, 130, 107)],
+    'bisexual': [(112, 2, 214), (112, 2, 214), (150, 79, 155), (168, 56, 0), (168, 56, 0)],
+    'demiboy': [(127, 127, 127), (195, 195, 195), (233, 217, 154), (255, 255, 255), (233, 217, 154), (195, 195, 195), (127, 127, 127)],
+    'demigirl': [(127, 127, 127), (195, 195, 195), (200, 175, 254), (255, 255, 255), (200, 175, 254), (195, 195, 195), (127, 127, 127)],
     'gay': [(113, 141, 19), (171, 206, 45), (195, 232, 153), (255, 255, 255), (223, 173, 124), (199, 73, 79), (119, 28, 61)],
     'genderfluid': [(162, 117, 255), (255, 255, 255), (214, 24, 190), (0, 0, 0), (189, 62, 51)],
     'genderqueer': [(220, 126, 181), (255, 255, 255), (35, 129, 74)],
+    'graysexual': [(143, 12, 115), (169, 176, 173), (255, 255, 255), (169, 176, 173), (143, 12, 115)],
+    'grayromantic': [(37, 125, 17), (175, 178, 176), (255, 255, 255), (175, 178, 176), (37, 125, 17)],
     'lesbian': [(0, 45, 213), (86, 154, 255), (255, 255, 255), (164, 98, 211), (83, 2, 138)],
     'nonbinary': [(48, 244, 255), (255, 255, 255), (209, 89, 156), (0, 0, 0)],
     'omnisexual': [(201, 153, 253), (185, 85, 254), (69, 3, 40), (248, 94, 100), (250, 163, 138)],
     'pansexual': [(140, 33, 255), (0, 216, 255), (255, 177, 33)],
+    'pangender': [(159, 247, 255), (206, 221, 255), (250, 235, 255), (255, 255, 255), (250, 235, 255), (206, 221, 255), (159, 247, 255)],
     'polysexual': [(185, 28, 246), (105, 213, 7), (246, 146, 28)],
     'pride': [(3, 3, 228), (0, 140, 255), (0, 237, 255), (38, 128, 0), (255, 77, 0), (135, 7, 117)],
     'transgender': [(250, 206, 91), (184, 169, 245), (255, 255, 255), (184, 169, 245), (250, 206, 91)]
 }
 
 aliases = {
+    'abro': 'abrosexual',
     'ace': 'asexual',
     'aro': 'aromantic',
     'bi': 'bisexual',
     'enby': 'nonbinary',
+    'fluid': 'genderfluid',
+    'gray': 'graysexual',
+    'grayce': 'graysexual',
+    'grayro': 'grayromantic',
+    'les': 'lesbian',
     'nb': 'nonbinary',
     'omni': 'omnisexual',
+    'pan': 'pansexual',
     'poly': 'polysexual',
     'trans': 'transgender'
 }
@@ -48,8 +59,18 @@ lightblue = np.array([238, 172, 85, 255], dtype = 'uint16')
 darkblue = np.array([153, 102, 34, 255], dtype = 'uint16')
 
 # start the bot
-bot = commands.Bot(command_prefix='$')
+bot = commands.Bot(command_prefix=config['PREFIX'])
 bot.remove_command('help')
+
+# set listening status to a random song from config
+@bot.event
+async def on_ready():
+    await bot.change_presence(
+        activity=discord.Activity(
+            type=discord.ActivityType.listening,
+            name=choice(config['MUSIC'])
+        )
+    )
 
 @bot.command()
 async def hug(ctx, p1, p2):
@@ -105,11 +126,26 @@ async def hug(ctx, p1, p2):
 
     await ctx.send(file=discord.File('output/hug.png'))
 
+@bot.command()
+async def stat(ctx, *, song=None):
+    if ctx.author.id in config['BOT_OPS']: # check if user is authorized
+        newstat = song or choice(config['MUSIC']) # set to custom song if specified, or random if not.
+        await bot.change_presence(
+            activity=discord.Activity(
+                type=discord.ActivityType.listening,
+                name=newstat
+            )
+        )
+        await ctx.message.add_reaction('\U00002705') # check mark emoji
+    else:
+        await ctx.message.add_reaction('\U000026A0') # warning emoji
+
+# help commands
 @bot.group(invoke_without_command=True)
 async def help(ctx):
-    em = discord.Embed(title='Help', description='Use $help <command> for more information about specific commands.', color=ctx.author.color)
-    em.add_field(name='Emotes in channel', value='hug')
-    em.add_field(name='Bot info', value='flags')
+    em = discord.Embed(title='Help', description='Use $help `command` for more information about specific commands, replacing `command` with the name of a command below.', color=ctx.author.color)
+    em.add_field(name='Emotes', value='hug')
+    em.add_field(name='Info', value='flags')
     await ctx.send(embed = em)
 
 @help.command()
