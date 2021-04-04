@@ -1,31 +1,39 @@
 # hugmaker
-A Discord bot to make custom hug emotes with pride flag colors.
+A Discord bot to make custom hug emotes, either using colors from pride flags or profile pictures of server members.
 
 ## Setup
 1. Clone this repository to your computer and open a terminal to that folder
-2. Create a virtual environment: `python3 -m venv .venv`
-3. Activate your virtual environment: `source .venv/bin/activate`
-4. Install dependencies: `pip install -r requirements.txt`
-5. Copy `example.config.yml` to a new file `config.yml`. Change the value of `BOT_TOKEN` to your bot token from the Discord Developer Portal. Also, customize the list of music to your heart's content and add the Discord user IDs of your trusted bot operators.
-6. Run the script! `python main.py`
+1. Create a virtual environment: `python3 -m venv .venv`
+1. Activate your virtual environment: `source .venv/bin/activate`
+1. Install dependencies: `pip install -r requirements.txt`
+1. Copy `example.config.yml` to a new file `config.yml`. Within it,
+    - Change the value of `BOT_TOKEN` to your bot token from the Discord Developer Portal
+    - Also, customize the list of music to your heart's content
+    - Add the Discord user IDs of your trusted bot operators
+    - Set your preferred user hug requirement setting. `true` requires the user to appear in any hug in which there is at least one profile picture, whereas `false` does not enforce this requirement. The purpose of the requirement, if enabled, is to prevent users from making two users other than themselves hug.
+1. Run the script! `python main.py`
 
 ## Usage
-The bot's current prefix is `$`. You can change this in the `main.py` file if you so desire.
+The bot's default prefix is `$`. You can change this in the config file if you so desire.
 
-To use the bot, type `$hug <flag1> <flag2>`, replacing `<flag1>` and `<flag2>` with any of the following currently supported flags:
+To use the bot, type `$hug <left> <right>`, replacing `<left>` and `<right>` with a **user mention** (or other string that resolves to a user class when passed into a [UserConverter](https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.UserConverter)) OR any of the following **currently supported flags**:
+```
 - abrosexual (alias: abro)
-- asexual (alias: ace)
 - agender
 - aromantic (alias: aro)
+- asexual (alias: ace)
 - bigender
 - bisexual (alias: bi)
 - demiboy
 - demigirl
+- demiromantic (alias: demiro)
+- demisexual (alias: demi)
 - gay
 - genderfluid (alias: fluid)
 - genderqueer
 - graysexual (alias: gray, grayce)
 - grayromantic (alias: grayro)
+- intersex
 - lesbian (alias: les)
 - nonbinary (aliases: enby, nb)
 - omnisexual (alias: omni)
@@ -34,8 +42,12 @@ To use the bot, type `$hug <flag1> <flag2>`, replacing `<flag1>` and `<flag2>` w
 - polysexual (alias: poly)
 - pride
 - transgender (alias: trans)
+```
+If there is at least one user mention/other user string in the hug, the bot will allow or deny user hugs based on your `REQUIRE_USER_HUG` config setting described above.
 
-It's also pretty easy to add more flags within `main.py` if you'd like, as long as they are striped.
+It's also pretty easy to add more flags to the bot by dropping a square png image of the flag into the `flags/` directory. If you want to define an alias, do that within `main.py`. The bot will take care of the rest!
 
-## Attributions
-Images created by this program are derivatives of ["People Hugging" (1fac2)](https://abs.twimg.com/emoji/v2/svg/1fac2.svg) by [Twitter, Inc](https://twemoji.twitter.com/), used under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+## Licenses
+Images created by hugmaker are derivatives of ["People Hugging" (1fac2)](https://abs.twimg.com/emoji/v2/svg/1fac2.svg) by [Twitter, Inc](https://twemoji.twitter.com/), used under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+The code of hugmaker is licensed under MIT. Images created by hugmaker are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) by Alex Mazansky.
