@@ -2,6 +2,8 @@ import cv2 as cv
 from discord.ext import commands
 import discord
 import numpy as np
+from pathlib import Path
+import os
 from random import choice
 import yaml
 
@@ -11,29 +13,8 @@ with open('config.yml', 'r') as f:
 
 token = config['BOT_TOKEN']
 
-flagset = {
-    'abrosexual',
-    'asexual',
-    'agender',
-    'aromantic',
-    'bigender',
-    'bisexual',
-    'demiboy',
-    'demigirl',
-    'gay',
-    'genderfluid',
-    'genderqueer',
-    'graysexual',
-    'grayromantic',
-    'lesbian',
-    'nonbinary',
-    'omnisexual',
-    'pansexual',
-    'pangender',
-    'polysexual',
-    'pride',
-    'transgender'
-}
+# generate set of flags from png files in flags folder
+flagset = {f[:-4] for f in os.listdir('flags') if f.endswith('.png')}
 
 aliases = {
     'abro': 'abrosexual',
@@ -113,8 +94,10 @@ async def hug(ctx, p1, p2):
     # downscale for anti-aliasing. INTER_AREA worked the best out of the methods I tried.
     resized = cv.resize(people, (512, 512), interpolation=cv.INTER_AREA)
 
-    cv.imwrite('output/hug.png', resized)
+    # create output directory if it doesn't exist already
+    Path('output').mkdir(exist_ok=True)
 
+    cv.imwrite('output/hug.png', resized)
     await ctx.send(file=discord.File('output/hug.png'))
 
 @bot.command()
