@@ -6,7 +6,7 @@ from random import choice
 import yaml
 
 # access config file
-with open('example.config.yml', 'r') as f:
+with open('config.yml', 'r') as f:
     config = yaml.safe_load(f)
 
 token = config['BOT_TOKEN']
