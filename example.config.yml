@@ -7,3 +7,8 @@ MUSIC: # List of music you want the bot to have in its status (format: "Listenin
 
 BOT_OPS: # List of Discord user IDs of your trusted bot operators
   - 
+
+# This setting is explained in more detail in main.py. In summary, if this setting is true,
+# the user may not make a hug with profile pictures belonging to two people other than
+# themselves.
+REQUIRE_USER_HUG: true

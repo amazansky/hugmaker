@@ -12,7 +12,9 @@ import yaml
 with open('config.yml', 'r') as f:
     config = yaml.safe_load(f)
 
+prefix = config['PREFIX']
 token = config['BOT_TOKEN']
+userhug = config['REQUIRE_USER_HUG'] # checks if user hug requirement is enabled
 
 # generate set of flags from png files in flags folder
 flagset = {f[:-4] for f in os.listdir('flags') if f.endswith('.png')}
@@ -22,6 +24,8 @@ aliases = {
     'ace': 'asexual',
     'aro': 'aromantic',
     'bi': 'bisexual',
+    'demi': 'demisexual',
+    'demiro': 'demiromantic',
     'enby': 'nonbinary',
     'fluid': 'genderfluid',
     'gray': 'graysexual',
@@ -40,7 +44,6 @@ lightblue = np.array([238, 172, 85, 255], dtype = 'uint16')
 darkblue = np.array([153, 102, 34, 255], dtype = 'uint16')
 
 # start the bot
-prefix = config['PREFIX']
 bot = commands.Bot(command_prefix=prefix)
 bot.remove_command('help')
 
@@ -49,15 +52,21 @@ bot.remove_command('help')
 class MemberProfilePicture(commands.MemberConverter):
     async def convert(self, ctx, argument):
         # map aliases to flags
+
+        # the second value in the return tuple represents whether the user is authorized to make
+        # that hug. the user must be authorized for at least one of the two "people" in the hug
+        # for the bot to send it.
+
         if argument in aliases:
-            return f'flags/{aliases[argument]}.png'
+            return (f'flags/{aliases[argument]}.png', 'flag')
         elif argument in flagset:
-            return f'flags/{argument}.png'
+            return (f'flags/{argument}.png', 'flag')
 
         # if parameter is not a predefined flag, try interpreting it as a member
         else:
             member = await super().convert(ctx, argument)
-            return str(member.avatar_url)
+            authorized = 'self' if member.id == ctx.author.id else 'other'
+            return (str(member.avatar_url), authorized)
 
 # set listening status to a random song from config
 @bot.event
@@ -71,63 +80,74 @@ async def on_ready():
 
 @bot.command()
 async def hug(ctx, left: MemberProfilePicture, right: MemberProfilePicture):
-    # TODO: check if author is in the hug if user hug setting is enabled in config
+    # check if author is in the hug OR if user hug requirement is disabled in config
+    # TODO: simplify the if statement
+    if 'self' in (left[1], right[1]) or (left[1] == 'flag' and right[1] == 'flag') or userhug == False: # user is authorized to make this hug
+        left = left[0]
+        right = right[0]
 
-    img = cv.imread('images/hug_2048.png', cv.IMREAD_UNCHANGED)
+        img = cv.imread('images/hug_2048.png', cv.IMREAD_UNCHANGED)
 
-    mask1 = cv.inRange(img, darkblue, darkblue)
-    mask2 = cv.inRange(img, lightblue, lightblue)
+        mask1 = cv.inRange(img, darkblue, darkblue)
+        mask2 = cv.inRange(img, lightblue, lightblue)
 
-    # define a rotate function to rotate the flag for person 2
-    def rotate(img, angle, scale=1.0):
-        (height,width) = img.shape[:2]
-        point = (width // 2, height // 2)
-        matrix = cv.getRotationMatrix2D(point, angle, scale)
-        dimensions = (width, height)
-        return cv.warpAffine(img, matrix, dimensions)
+        # define a rotate function to rotate the flag for person 2
+        def rotate(img, angle, scale=1.0):
+            (height,width) = img.shape[:2]
+            point = (width // 2, height // 2)
+            matrix = cv.getRotationMatrix2D(point, angle, scale)
+            dimensions = (width, height)
+            return cv.warpAffine(img, matrix, dimensions)
 
-    # create each flag from its corresponding colors
-    pflags = []
-    for p in left, right:
-        if p[6:-4] in flagset:
-            pflag = cv.imread(p, cv.IMREAD_UNCHANGED)
-            pflag = cv.resize(pflag, (img.shape[0], img.shape[1]))
-        else:
-            # TODO: Change the user agent to something other than magic browser
-            req = urllib.request.Request(p, headers={'User-Agent' : 'Magic Browser'})
-            con = urllib.request.urlopen(req)
-            arr = np.asarray(bytearray(con.read()), dtype='uint8')
-            decoded = cv.imdecode(arr, -1)
+        # create each flag from its corresponding colors
+        pflags = []
+        for p in left, right:
+            if p[6:-4] in flagset:
+                pflag = cv.imread(p, cv.IMREAD_UNCHANGED)
+                pflag = cv.resize(pflag, (img.shape[0], img.shape[1]))
+            else:
+                # TODO: Change the user agent to something other than magic browser
+                req = urllib.request.Request(p, headers={'User-Agent' : 'Magic Browser'})
+                con = urllib.request.urlopen(req)
+                arr = np.asarray(bytearray(con.read()), dtype='uint8')
+                decoded = cv.imdecode(arr, -1)
 
-            # add alpha channel to Discord profile channel
-            # (some profile pictures already have an alpha channel; some don't yet.)
-            rgba = cv.cvtColor(decoded, cv.COLOR_BGR2BGRA)
-            rgba[:, :, 3] = 255
-            pflag = cv.resize(rgba, (img.shape[0], img.shape[1]))
+                # add alpha channel to Discord profile channel
+                # (some profile pictures already have an alpha channel; some don't yet.)
+                rgba = cv.cvtColor(decoded, cv.COLOR_BGR2BGRA)
+                rgba[:, :, 3] = 255
+                pflag = cv.resize(rgba, (img.shape[0], img.shape[1]))
 
-        pflags.append(pflag)
+            pflags.append(pflag)
 
-    if left == right: # darken left flag if they're the same
-        pflags[0] = pflags[0] * 0.8
-        pflags[0] = pflags[0].astype('uint8')
+        if left == right: # darken left flag if they're the same
+            pflags[0] = pflags[0] * 0.8
+            pflags[0] = pflags[0].astype('uint8')
 
-    # rotate right flag 5 degrees
-    pflags[1] = rotate(pflags[1], 5, 1.1)
+        # rotate right flag 5 degrees
+        pflags[1] = rotate(pflags[1], 5, 1.1)
 
-    # use the people as masks for the flags
-    person1 = cv.bitwise_and(pflags[0], pflags[0], mask=mask1)
-    person2 = cv.bitwise_and(pflags[1], pflags[1], mask=mask2)
+        # use the people as masks for the flags
+        person1 = cv.bitwise_and(pflags[0], pflags[0], mask=mask1)
+        person2 = cv.bitwise_and(pflags[1], pflags[1], mask=mask2)
 
-    people = cv.bitwise_or(person1, person2)
+        people = cv.bitwise_or(person1, person2)
 
-    # downscale for anti-aliasing. INTER_AREA worked the best out of the methods I tried.
-    resized = cv.resize(people, (512, 512), interpolation=cv.INTER_AREA)
+        # downscale for anti-aliasing. INTER_AREA worked the best out of the methods I tried.
+        resized = cv.resize(people, (512, 512), interpolation=cv.INTER_AREA)
 
-    # create output directory if it doesn't exist already
-    Path('output').mkdir(exist_ok=True)
+        # create output directory if it doesn't exist already
+        Path('output').mkdir(exist_ok=True)
 
-    cv.imwrite('output/hug.png', resized)
-    await ctx.send(file=discord.File('output/hug.png'))
+        cv.imwrite('output/hug.png', resized)
+        await ctx.send(file=discord.File('output/hug.png'))
+
+    else: # user is not authorized to make this hug
+        msg = 'To prevent abuse of this feature, you must include yourself in any hug containing at least one profile picture.'
+        if ctx.author.id in config['BOT_OPS']:
+            msg += ' As a bot operator, you may change this by setting `REQUIRE_USER_HUG` to `false` in `config.yml`.'
+        await ctx.send(msg)
+
 
 @bot.command()
 async def stat(ctx, *, song=None):
