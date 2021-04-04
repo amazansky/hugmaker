@@ -4,6 +4,7 @@ import discord
 import numpy as np
 from pathlib import Path
 import os
+import urllib
 from random import choice
 import yaml
 
@@ -39,8 +40,24 @@ lightblue = np.array([238, 172, 85, 255], dtype = 'uint16')
 darkblue = np.array([153, 102, 34, 255], dtype = 'uint16')
 
 # start the bot
-bot = commands.Bot(command_prefix=config['PREFIX'])
+prefix = config['PREFIX']
+bot = commands.Bot(command_prefix=prefix)
 bot.remove_command('help')
+
+# define a member converter class which returns a flag if it in the list ...
+# otherwise it searches for a member using the parameter info.
+class MemberProfilePicture(commands.MemberConverter):
+    async def convert(self, ctx, argument):
+        # map aliases to flags
+        if argument in aliases:
+            return f'flags/{aliases[argument]}.png'
+        elif argument in flagset:
+            return f'flags/{argument}.png'
+
+        # if parameter is not a predefined flag, try interpreting it as a member
+        else:
+            member = await super().convert(ctx, argument)
+            return str(member.avatar_url)
 
 # set listening status to a random song from config
 @bot.event
@@ -53,10 +70,8 @@ async def on_ready():
     )
 
 @bot.command()
-async def hug(ctx, p1, p2):
-    # map aliases to flags
-    p1 = aliases[p1] if p1 in aliases else p1
-    p2 = aliases[p2] if p2 in aliases else p2
+async def hug(ctx, left: MemberProfilePicture, right: MemberProfilePicture):
+    # TODO: check if author is in the hug if user hug setting is enabled in config
 
     img = cv.imread('images/hug_2048.png', cv.IMREAD_UNCHANGED)
 
@@ -72,22 +87,36 @@ async def hug(ctx, p1, p2):
         return cv.warpAffine(img, matrix, dimensions)
 
     # create each flag from its corresponding colors
-    if p1 in flagset:
-        flag1 = cv.imread(f'flags/{p1}.png', cv.IMREAD_UNCHANGED)
-        flag1 = cv.resize(flag1, (img.shape[0], img.shape[1]))
+    pflags = []
+    for p in left, right:
+        if p[6:-4] in flagset:
+            pflag = cv.imread(p, cv.IMREAD_UNCHANGED)
+            pflag = cv.resize(pflag, (img.shape[0], img.shape[1]))
+        else:
+            # TODO: Change the user agent to something other than magic browser
+            req = urllib.request.Request(p, headers={'User-Agent' : 'Magic Browser'})
+            con = urllib.request.urlopen(req)
+            arr = np.asarray(bytearray(con.read()), dtype='uint8')
+            decoded = cv.imdecode(arr, -1)
 
-        if p1 == p2:
-            flag1 = flag1 * 0.8
-            flag1 = flag1.astype('uint8')
+            # add alpha channel to Discord profile channel
+            # (some profile pictures already have an alpha channel; some don't yet.)
+            rgba = cv.cvtColor(decoded, cv.COLOR_BGR2BGRA)
+            rgba[:, :, 3] = 255
+            pflag = cv.resize(rgba, (img.shape[0], img.shape[1]))
 
-    if p2 in flagset:
-        flag2 = cv.imread(f'flags/{p2}.png', cv.IMREAD_UNCHANGED)
-        flag2 = cv.resize(flag2, (img.shape[0], img.shape[1]))
-    flag2 = rotate(flag2, 5, 1.1)
+        pflags.append(pflag)
+
+    if left == right: # darken left flag if they're the same
+        pflags[0] = pflags[0] * 0.8
+        pflags[0] = pflags[0].astype('uint8')
+
+    # rotate right flag 5 degrees
+    pflags[1] = rotate(pflags[1], 5, 1.1)
 
     # use the people as masks for the flags
-    person1 = cv.bitwise_and(flag1, flag1, mask=mask1)
-    person2 = cv.bitwise_and(flag2, flag2, mask=mask2)
+    person1 = cv.bitwise_and(pflags[0], pflags[0], mask=mask1)
+    person2 = cv.bitwise_and(pflags[1], pflags[1], mask=mask2)
 
     people = cv.bitwise_or(person1, person2)
 
@@ -117,7 +146,7 @@ async def stat(ctx, *, song=None):
 # help commands
 @bot.group(invoke_without_command=True)
 async def help(ctx):
-    em = discord.Embed(title='Help', description='Use $help `command` for more information about specific commands, replacing `command` with the name of a command below.', color=ctx.author.color)
+    em = discord.Embed(title='Help', description=f'Use {prefix}help `command` for more information about specific commands, replacing `command` with the name of a command below.', color=ctx.author.color)
     em.add_field(name='Emotes', value='hug')
     em.add_field(name='Info', value='flags')
     await ctx.send(embed = em)
@@ -125,15 +154,15 @@ async def help(ctx):
 @help.command()
 async def flags(ctx):
     abbr, full = choice(list(aliases.items()))
-    em = discord.Embed(title='Pride flags', description='This is the full list of flags supported by the bot. Shortened names also work (e.g. \"%s\" for \"%s\").' % (abbr, full))
-    em.add_field(name='Full list', value=', '.join(flagdict))
+    em = discord.Embed(title='Pride flags', description=f'This is the full list of flags supported by the bot. Shortened names also work (e.g. \"{abbr}\" for \"{full}\").')
+    em.add_field(name='Full list', value=', '.join(sorted(flagset)))
     await ctx.send(embed = em)
 
 @help.command()
 async def hug(ctx):
     em = discord.Embed(title='Hug', description='Sends a hug emote where the people are pride flags')
-    em.add_field(name='Syntax', value='$hug `flag1` `flag2`')
-    em.add_field(name='Parameters', value='`flag1` and `flag2` should be replaced by the names of pride flags. *(Run `$help flags` for a full list.)*')
+    em.add_field(name='Syntax', value=f'{prefix}hug `flag1` `flag2`')
+    em.add_field(name='Parameters', value=f'`flag1` and `flag2` should be replaced by the names of pride flags. *(Run `{prefix}help flags` for a full list.)*')
     await ctx.send(embed = em)
 
 bot.run(token)
