@@ -83,9 +83,6 @@ async def hug(ctx, left: MemberProfilePicture, right: MemberProfilePicture):
     # check if author is in the hug OR if user hug requirement is disabled in config
     # TODO: simplify the if statement
     if 'self' in (left[1], right[1]) or (left[1] == 'flag' and right[1] == 'flag') or userhug == False: # user is authorized to make this hug
-        left = left[0]
-        right = right[0]
-
         img = cv.imread('images/hug_2048.png', cv.IMREAD_UNCHANGED)
 
         mask1 = cv.inRange(img, darkblue, darkblue)
@@ -101,7 +98,7 @@ async def hug(ctx, left: MemberProfilePicture, right: MemberProfilePicture):
 
         # create each flag from its corresponding colors
         pflags = []
-        for p in left, right:
+        for p in left[0], right[0]:
             if p[6:-4] in flagset:
                 pflag = cv.imread(p, cv.IMREAD_UNCHANGED)
                 pflag = cv.resize(pflag, (img.shape[0], img.shape[1]))
@@ -120,12 +117,13 @@ async def hug(ctx, left: MemberProfilePicture, right: MemberProfilePicture):
 
             pflags.append(pflag)
 
-        if left == right: # darken left flag if they're the same
+        if left[0] == right[0]: # darken left flag if they're the same
             pflags[0] = pflags[0] * 0.8
             pflags[0] = pflags[0].astype('uint8')
 
-        # rotate right flag 5 degrees
-        pflags[1] = rotate(pflags[1], 5, 1.1)
+        # rotate right flag 5 degrees as long as it isn't a user profile picture
+        if right[1] != 'self' and right[1] != 'other':
+            pflags[1] = rotate(pflags[1], 5, 1.1)
 
         # use the people as masks for the flags
         person1 = cv.bitwise_and(pflags[0], pflags[0], mask=mask1)
