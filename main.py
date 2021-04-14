@@ -1,11 +1,11 @@
 import cv2 as cv
-from discord.ext import commands
 import discord
+from discord.ext import commands
 import numpy as np
-from pathlib import Path
 import os
-import urllib
+import pathlib
 from random import choice
+import urllib
 import yaml
 
 # access config file
@@ -109,7 +109,7 @@ async def hug(ctx, left: MemberProfilePicture, right: MemberProfilePicture):
                 arr = np.asarray(bytearray(con.read()), dtype='uint8')
                 decoded = cv.imdecode(arr, -1)
 
-                # add alpha channel to Discord profile channel
+                # add alpha channel to Discord profile picture
                 # (some profile pictures already have an alpha channel; some don't yet.)
                 rgba = cv.cvtColor(decoded, cv.COLOR_BGR2BGRA)
                 rgba[:, :, 3] = 255
@@ -135,7 +135,7 @@ async def hug(ctx, left: MemberProfilePicture, right: MemberProfilePicture):
         resized = cv.resize(people, (512, 512), interpolation=cv.INTER_AREA)
 
         # create output directory if it doesn't exist already
-        Path('output').mkdir(exist_ok=True)
+        pathlib.Path('output').mkdir(exist_ok=True)
 
         cv.imwrite('output/hug.png', resized)
         await ctx.send(file=discord.File('output/hug.png'))
