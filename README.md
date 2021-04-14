@@ -19,6 +19,7 @@ The bot's default prefix is `$`. You can change this in the config file if you s
 To use the bot, type `$hug <left> <right>`, replacing `<left>` and `<right>` with a **user mention** (or other string that resolves to a user class when passed into a [UserConverter](https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.UserConverter)) OR any of the following **currently supported flags**:
 ```
 - abrosexual (alias: abro)
+- achillean
 - agender
 - aromantic (alias: aro)
 - asexual (alias: ace)
@@ -30,6 +31,7 @@ To use the bot, type `$hug <left> <right>`, replacing `<left>` and `<right>` wit
 - demisexual (alias: demi)
 - gay
 - genderfluid (alias: fluid)
+- genderflux (alias: flux)
 - genderqueer
 - graysexual (alias: gray, grayce)
 - grayromantic (alias: grayro)
@@ -41,7 +43,10 @@ To use the bot, type `$hug <left> <right>`, replacing `<left>` and `<right>` wit
 - pangender
 - polysexual (alias: poly)
 - pride
+- sapphic
+- toric
 - transgender (alias: trans)
+- trixic
 ```
 If there is at least one user mention/other user string in the hug, the bot will allow or deny user hugs based on your `REQUIRE_USER_HUG` config setting described above.
 
