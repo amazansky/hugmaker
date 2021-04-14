@@ -161,6 +161,14 @@ async def stat(ctx, *, song=None):
     else:
         await ctx.message.add_reaction('\U000026A0') # warning emoji
 
+@bot.command()
+async def echo(ctx, text):
+    if ctx.author.id in config['BOT_OPS']: # check if user is authorized
+        await ctx.send(text)
+        await ctx.message.add_reaction('\U00002705') # check mark emoji
+    else:
+        await ctx.message.add_reaction('\U000026A0') # warning emoji
+
 # help commands
 @bot.group(invoke_without_command=True)
 async def help(ctx):
