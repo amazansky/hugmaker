@@ -48,6 +48,16 @@ darkblue = np.array([153, 102, 34, 255], dtype = 'uint16')
 bot = commands.Bot(command_prefix=prefix)
 bot.remove_command('help')
 
+if config['SENTRY_DSN']: # activate Sentry reporting if enabled
+    from discord_sentry_reporting import use_sentry
+
+    use_sentry(
+        bot,
+        dsn = config['SENTRY_DSN'],
+        traces_sample_rate = 1.0,
+        environment = config['ENV_NAME']
+    )
+
 # define a member converter class which returns a flag if it in the list ...
 # otherwise it searches for a member using the parameter info.
 class MemberProfilePicture(commands.MemberConverter):

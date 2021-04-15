@@ -12,3 +12,8 @@ BOT_OPS: # List of Discord user IDs of your trusted bot operators
 # the user may not make a hug with profile pictures belonging to two people other than
 # themselves.
 REQUIRE_USER_HUG: true
+
+# If you provide a DSN here, Sentry reporting will be activated. Otherwise it will not. The
+# config setting "ENV_NAME" will be used as the Sentry environment name.
+ENV_NAME: 
+SENTRY_DSN: 
