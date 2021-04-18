@@ -30,6 +30,8 @@ async def count(a):
             results[x] = 1
         else:
             results[x] += 1
+    
+    del results[0]
     return max(results, key=lambda x: results[x])
 
 flagset = {f[:-4] for f in os.listdir('flags') if f.endswith('.png')}
