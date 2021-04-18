@@ -15,11 +15,22 @@ with open('config.yml', 'r') as f:
 prefix = config['PREFIX']
 token = config['BOT_TOKEN']
 
-# star
-# yellow = np.array([51, 172, 255, 255], dtype = 'uint16')
+async def findmost(a):
+    a2D = a.reshape(-1,a.shape[-1])
+    col_range = (256, 256, 256, 256) # generically : a2D.max(0)+1
+    a1D = np.ravel_multi_index(a2D.T, col_range)
+    unr = np.unravel_index(await count(a1D), col_range)
+    return np.array(unr)
 
-# most of them
-yellow = np.array([77, 204, 255, 255], dtype = np.uint8)
+# TODO: optimize this further?
+async def count(a):
+    results = {}
+    for x in a:
+        if x not in results:
+            results[x] = 1
+        else:
+            results[x] += 1
+    return max(results, key=lambda x: results[x])
 
 flagset = {f[:-4] for f in os.listdir('flags') if f.endswith('.png')}
 
@@ -42,6 +53,7 @@ aliases = {
     'poly': 'polysexual',
     'trans': 'transgender'
 }
+
 # start the bot
 bot = commands.Bot(command_prefix=prefix)
 
@@ -52,7 +64,7 @@ async def add(ctx, e):
             unicode = f'{ord(e):x}'
             # unicode = e
         except TypeError: # paramater was not a single character
-            await ctx.send(f'Error: You must use `{prefix}make` with an emoji character.')
+            await ctx.send(f'Error: You must use `{prefix}add` with an emoji character.')
             return
 
         req = urllib.request.Request(f'https://twemoji.maxcdn.com/v/latest/svg/{unicode}.svg', headers={'User-Agent' : 'Magic Browser'})
@@ -88,15 +100,9 @@ async def rm(ctx, e):
 async def make(ctx, e, flag, *, options=''):
     # send notice about any unrecognized options. currently only blur is recognized.
     options = options.split()
-    msg = ''
-    for (i, o) in enumerate(options):
-        if i > 1:
-            msg += ', '
-        if o != 'blur':
-            msg += f'`{o}`'
-    if msg:
-        plural = 's' if i > 1 else ''
-        await ctx.send(f'Warning: Unrecognized option{plural}: {msg}.')
+    unrecog = ['`' + o + '`' for o in options if o != 'blur']
+    if unrecog:
+        await ctx.send(f'Warning: Unrecognized option(s): {", ".join(unrecog)}.')
 
     try:
         unicode = f'{ord(e):x}'
@@ -117,13 +123,8 @@ async def make(ctx, e, flag, *, options=''):
             await ctx.send(f'Error: The emoji you used is either unrecognized or has not been added to hugmaker at this time.')
             return
 
-    # removed because it adds a black layer to the emoji
-    """ # I think most (all?) Twemoji icons are already transparent but it never hurts to be safe
-    # print(emoji)
-    emoji = cv.cvtColor(emoji, cv.COLOR_BGR2BGRA)
-    emoji[:, :, 3] = 255 """
-
-    emoji_mask = cv.inRange(emoji, yellow, yellow)
+    most = await findmost(emoji)
+    emoji_mask = cv.inRange(emoji, most, most)
 
     if flag in aliases:
         p = f'flags/{aliases[flag]}.png'
