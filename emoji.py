@@ -15,24 +15,24 @@ with open('config.yml', 'r') as f:
 prefix = config['PREFIX']
 token = config['BOT_TOKEN']
 
-async def findmost(a):
+async def findmost(a): # find the color that appears most in the emoji
     a2D = a.reshape(-1,a.shape[-1])
-    col_range = (256, 256, 256, 256) # generically : a2D.max(0)+1
+    col_range = (256, 256, 256, 256)
     a1D = np.ravel_multi_index(a2D.T, col_range)
-    unr = np.unravel_index(await count(a1D), col_range)
-    return np.array(unr)
 
-# TODO: optimize this further?
-async def count(a):
+    # TODO: optimize this further?
     results = {}
-    for x in a:
+    for x in a1D:
         if x not in results:
             results[x] = 1
         else:
             results[x] += 1
-    
-    del results[0]
-    return max(results, key=lambda x: results[x])
+
+    del results[0] # remove transparent pixels from most frequent color list
+    a_max = max(results, key=lambda x: results[x])
+
+    unr = np.unravel_index(a_max, col_range)
+    return np.array(unr)
 
 flagset = {f[:-4] for f in os.listdir('flags') if f.endswith('.png')}
 
@@ -60,45 +60,6 @@ aliases = {
 bot = commands.Bot(command_prefix=prefix)
 
 @bot.command()
-async def add(ctx, e):
-    if ctx.author.id in config['BOT_OPS']: # check if user is authorized
-        try:
-            unicode = f'{ord(e):x}'
-            # unicode = e
-        except TypeError: # paramater was not a single character
-            await ctx.send(f'Error: You must use `{prefix}add` with an emoji character.')
-            return
-
-        req = urllib.request.Request(f'https://twemoji.maxcdn.com/v/latest/svg/{unicode}.svg', headers={'User-Agent' : 'Magic Browser'})
-        con = urllib.request.urlopen(req)
-
-        cairosvg.svg2svg(bytestring=bytes(con.read()), write_to=f'emoji/{unicode}.svg')
-
-        await ctx.message.add_reaction('\U00002705') # check mark emoji
-    else:
-        await ctx.message.add_reaction('\U000026A0') # warning emoji
-
-@bot.command()
-async def rm(ctx, e):
-    if ctx.author.id in config['BOT_OPS']: # check if user is authorized
-        try:
-            unicode = f'{ord(e):x}'
-            # unicode = e
-        except TypeError: # paramater was not a single character
-            await ctx.send(f'Error: You must use `{prefix}make` with an emoji character.')
-            return
-
-        for filename in f'emoji/{unicode}.svg', f'emoji/{unicode}.png':
-            try:
-                os.remove(filename)
-            except OSError:
-                pass
-
-        await ctx.message.add_reaction('\U00002705') # check mark emoji
-    else:
-        await ctx.message.add_reaction('\U000026A0') # warning emoji
-
-@bot.command()
 async def make(ctx, e, flag, *, options=''):
     # send notice about any unrecognized options. currently only blur is recognized.
     options = options.split()
@@ -106,24 +67,22 @@ async def make(ctx, e, flag, *, options=''):
     if unrecog:
         await ctx.send(f'Warning: Unrecognized option(s): {", ".join(unrecog)}.')
 
+    # TODO: download/cache svg files
+    unicode = f'{ord(e[0]):x}'
+    req = urllib.request.Request(f'https://twemoji.maxcdn.com/v/latest/svg/{unicode}.svg', headers={'User-Agent' : 'Magic Browser'})
+
     try:
-        unicode = f'{ord(e):x}'
-        # unicode = e
-    except TypeError: # paramater was not a single character
-        await ctx.send(f'Error: You must use `{prefix}make` with an emoji character.')
+        con = urllib.request.urlopen(req)
+    except urllib.error.HTTPError:
+        await ctx.send('Error: The character you used is not a recognized emoji.')
         return
 
-    epath = f'emoji/{unicode}.png'
+    imgbytes = cairosvg.svg2png(bytestring=bytes(con.read()), output_width=2048, output_height=2048)
 
-    if pathlib.Path(epath).exists():
-        emoji = cv.imread(epath, cv.IMREAD_UNCHANGED)
-    else: # file is not converted to png yet. convert and try again.
-        try:
-            cairosvg.svg2png(url=f'emoji/{unicode}.svg', output_width=2048, output_height=2048, write_to=f'emoji/{unicode}.png')
-            emoji = cv.imread(epath, cv.IMREAD_UNCHANGED)
-        except URLError:
-            await ctx.send(f'Error: The emoji you used is either unrecognized or has not been added to hugmaker at this time.')
-            return
+    nparr = np.frombuffer(imgbytes, np.uint8)
+    emoji = cv.imdecode(nparr, cv.IMREAD_UNCHANGED)
+
+    await ctx.message.add_reaction('\U00002705') # check mark emoji
 
     most = await findmost(emoji)
     emoji_mask = cv.inRange(emoji, most, most)
@@ -163,14 +122,5 @@ async def make(ctx, e, flag, *, options=''):
 
     cv.imwrite('output/emoji.png', resized)
     await ctx.send(file=discord.File('output/emoji.png'))
-
-# Test command: converts and outputs every svg in the folder as a test
-@bot.command()
-async def t(ctx):
-    emojis = {f[:-4] for f in os.listdir('emoji') if f.endswith('.svg')}
-
-    for e in emojis:
-        # print(e)
-        await make(ctx, e, 'pride')
 
 bot.run(token)
