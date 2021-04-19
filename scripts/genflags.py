@@ -47,5 +47,5 @@ for flag in flagdict:
             color,
             -1
         )
-        cv.imwrite(f'../flags/{flag}.png', blank)
 
+    cv.imwrite(f'../flags/{flag}.png', blank)

@@ -1,3 +1,7 @@
+# This is probably a bad way of doing this, but it's easy and is used within the bot. Maybe
+# I'll change it later.
+BOT_VERSION: v1.0.0
+
 BOT_TOKEN: YOUR_TOKEN_HERE
 
 PREFIX: $
