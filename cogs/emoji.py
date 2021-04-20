@@ -37,8 +37,12 @@ class Emoji(commands.Cog):
         if unrecog:
             await ctx.send(f'Warning: Unrecognized option(s): {", ".join(unrecog)}.')
 
+        e = e.encode('utf-8')
+        e = e[:-3] if e.endswith(b'\xef\xb8\x8f') else e # remove variation selector 16 if present
+        e = e.decode('utf-8')
+
         # TODO: download/cache svg files
-        unicode = f'{ord(e[0]):x}'
+        unicode = '-'.join([f'{ord(utf):x}' for utf in e])
         req = urllib.request.Request(f'https://twemoji.maxcdn.com/v/latest/svg/{unicode}.svg', headers={'User-Agent' : 'Magic Browser'})
 
         try:
@@ -54,9 +58,6 @@ class Emoji(commands.Cog):
 
         await ctx.message.add_reaction('\U00002705') # check mark emoji
 
-        most = await self.findmost(emoji)
-        emoji_mask = cv.inRange(emoji, most, most)
-
         if flag in aliases:
             p = f'flags/{aliases[flag]}.png'
         elif flag in flagset:
@@ -64,6 +65,9 @@ class Emoji(commands.Cog):
         else:
             await ctx.send(f'Error: One or more of the flags you entered is not currently supported.')
             return
+
+        most = await self.findmost(emoji)
+        emoji_mask = cv.inRange(emoji, most, most)
 
         # create flag from its corresponding colors
         eflag = cv.imread(p, cv.IMREAD_UNCHANGED)
