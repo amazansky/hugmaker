@@ -10,24 +10,29 @@ import urllib
 from util import aliases, config, flagset
 
 class Emoji(commands.Cog):
-    async def findmost(self, a): # find the color that appears most in the emoji
-        a2D = a.reshape(-1,a.shape[-1])
-        col_range = (256, 256, 256, 256)
-        a1D = np.ravel_multi_index(a2D.T, col_range)
+    memo = {}
 
-        # TODO: optimize this further?
-        results = {}
-        for x in a1D:
-            if x not in results:
-                results[x] = 1
-            else:
-                results[x] += 1
+    async def findmost(self, a, unicode_key): # find the color that appears most in the emoji
+        if unicode_key not in self.memo: # memoize color results
+            a2D = a.reshape(-1,a.shape[-1])
+            col_range = (256, 256, 256, 256)
+            a1D = np.ravel_multi_index(a2D.T, col_range)
 
-        del results[0] # remove transparent pixels from most frequent color list
-        a_max = max(results, key=lambda x: results[x])
+            # TODO: optimize this further such that memoization is unnecessary?
+            results = {}
+            for x in a1D:
+                if x not in results:
+                    results[x] = 1
+                else:
+                    results[x] += 1
 
-        unr = np.unravel_index(a_max, col_range)
-        return np.array(unr)
+            del results[0] # remove transparent pixels from most frequent color list
+            a_max = max(results, key=lambda x: results[x])
+
+            unr = np.unravel_index(a_max, col_range)
+            self.memo[unicode_key] = np.array(unr)
+
+        return self.memo[unicode_key]
 
     @commands.command()
     async def make(self, ctx, e, flag, *, options=''):
@@ -56,8 +61,6 @@ class Emoji(commands.Cog):
         nparr = np.frombuffer(imgbytes, np.uint8)
         emoji = cv.imdecode(nparr, cv.IMREAD_UNCHANGED)
 
-        await ctx.message.add_reaction('\U00002705') # check mark emoji
-
         if flag in aliases:
             p = f'flags/{aliases[flag]}.png'
         elif flag in flagset:
@@ -66,7 +69,7 @@ class Emoji(commands.Cog):
             await ctx.send(f'Error: One or more of the flags you entered is not currently supported.')
             return
 
-        most = await self.findmost(emoji)
+        most = await self.findmost(emoji, unicode)
         emoji_mask = cv.inRange(emoji, most, most)
 
         # create flag from its corresponding colors
