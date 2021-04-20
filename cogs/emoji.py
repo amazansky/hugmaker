@@ -71,6 +71,22 @@ class Emoji(commands.Cog):
         most = await self.findmost(emoji, unicode)
         emoji_mask = cv.inRange(emoji, most, most)
 
+        indices = np.where(emoji_mask == [255])
+
+        # get y coordinate of first and last pixel of the color
+        first, last = indices[0][0], indices[0][-1]
+
+        # TODO: don't hardcode 2048
+        flagarea = np.zeros((2048, 2048, 4), dtype=np.uint8)
+
+        cv.rectangle(
+            flagarea,
+            (0, first),
+            (2048, last),
+            255,
+            -1
+        )
+
         # create flag from its corresponding colors
         eflag = cv.imread(p, cv.IMREAD_UNCHANGED)
         eflag[:, :, 3] = 255
@@ -78,10 +94,11 @@ class Emoji(commands.Cog):
         if 'blur' in options:
             eflag = cv.blur(eflag, (500, 500))
 
-        eflag = cv.resize(eflag, (emoji.shape[0], emoji.shape[1]))
+        eflag = cv.resize(eflag, (2048, last - first))
+        flagarea[first:last, 0:2048] = eflag
 
         # add flag mask to the emoji
-        masked = cv.bitwise_and(eflag, eflag, mask=emoji_mask)
+        masked = cv.bitwise_and(flagarea, flagarea, mask=emoji_mask)
 
         # inverse binary threshold based on transparency >0
         _, negative = cv.threshold(masked[:,:,3], thresh=1, maxval=255, type=cv.THRESH_BINARY_INV)
@@ -89,7 +106,6 @@ class Emoji(commands.Cog):
         other = cv.bitwise_and(emoji, emoji, mask=negative)
 
         final = cv.bitwise_or(other, masked)
-        cv.imwrite('output/emoji.png', final)
 
         resized = cv.resize(final, (512, 512), interpolation=cv.INTER_AREA)
 

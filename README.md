@@ -52,6 +52,8 @@ If there is at least one user mention/other user string in the hug, the bot will
 It's also pretty easy to add more flags to the bot by dropping a square png image of the flag into the `flags/` directory. If you want to define an alias, do that within `util.py`. The bot will take care of the rest!
 
 ## Licenses
-Images created by hugmaker are derivatives of ["People Hugging" (1fac2)](https://abs.twimg.com/emoji/v2/svg/1fac2.svg) by [Twitter, Inc](https://twemoji.twitter.com/), used under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Hug emotes created by hugmaker are derivatives of ["People Hugging" (1fac2)](https://abs.twimg.com/emoji/v2/svg/1fac2.svg) by [Twitter, Inc](https://twemoji.twitter.com/), used under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
-The code of hugmaker is licensed under MIT. Images created by hugmaker are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) by Alex Mazansky.
+Emoji-generated emotes created by hugmaker are derivatives of [Twemoji](https://twemoji.twitter.com/) emotes by [Twitter, Inc](https://twemoji.twitter.com/), used under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
+The source code of hugmaker is licensed under MIT. Images created by hugmaker are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) by Alex Mazansky.

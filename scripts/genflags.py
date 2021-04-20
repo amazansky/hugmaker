@@ -31,7 +31,7 @@ flagdict = {
 
 for flag in flagdict:
     size = 2048
-    blank = np.zeros((size, size, 4), dtype='uint8')
+    blank = np.zeros((size, size, 4), dtype=np.uint8)
 
     colors = flagdict[flag]
 

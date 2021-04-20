@@ -66,7 +66,7 @@ class Hug(commands.Cog):
                     # TODO: Change the user agent to something other than magic browser
                     req = urllib.request.Request(p, headers={'User-Agent' : 'Magic Browser'})
                     con = urllib.request.urlopen(req)
-                    arr = np.asarray(bytearray(con.read()), dtype='uint8')
+                    arr = np.asarray(bytearray(con.read()), dtype=np.uint8)
                     decoded = cv.imdecode(arr, -1)
 
                     # add alpha channel to Discord profile picture
