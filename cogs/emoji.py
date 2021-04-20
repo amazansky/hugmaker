@@ -12,27 +12,26 @@ from util import aliases, config, flagset
 class Emoji(commands.Cog):
     memo = {}
 
-    async def findmost(self, a, unicode_key): # find the color that appears most in the emoji
-        if unicode_key not in self.memo: # memoize color results
-            a2D = a.reshape(-1,a.shape[-1])
-            col_range = (256, 256, 256, 256)
-            a1D = np.ravel_multi_index(a2D.T, col_range)
+    async def findmost(self, em, unicode_key): # find the color that appears most in the emoji
+        a = cv.resize(em, (128, 128)) # scale down emoji for finding color
 
-            # TODO: optimize this further such that memoization is unnecessary?
-            results = {}
-            for x in a1D:
-                if x not in results:
-                    results[x] = 1
-                else:
-                    results[x] += 1
+        a2D = a.reshape(-1,a.shape[-1])
+        col_range = (256, 256, 256, 256)
+        a1D = np.ravel_multi_index(a2D.T, col_range)
 
-            del results[0] # remove transparent pixels from most frequent color list
-            a_max = max(results, key=lambda x: results[x])
+        results = {}
+        for x in a1D:
+            if x not in results:
+                results[x] = 1
+            else:
+                results[x] += 1
 
-            unr = np.unravel_index(a_max, col_range)
-            self.memo[unicode_key] = np.array(unr)
+        del results[0] # remove transparent pixels from most frequent color list
+        a_max = max(results, key=lambda x: results[x])
 
-        return self.memo[unicode_key]
+        unr = np.unravel_index(a_max, col_range)
+
+        return np.array(unr)
 
     @commands.command()
     async def make(self, ctx, e, flag, *, options=''):
