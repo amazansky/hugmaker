@@ -1,10 +1,9 @@
 # hugmaker
-A Discord bot to make custom hug emotes, either using colors from pride flags or profile pictures of server members.
+A Discord bot to make custom hug and other emotes, either using colors from pride flags or profile pictures of server members.
 
 ## Setup
 1. Clone this repository to your computer and open a terminal to that folder
-1. Create a virtual environment: `python3 -m venv .venv`
-1. Activate your virtual environment: `source .venv/bin/activate`
+1. Create and activate a virtual environment (highly recommended!): `python3 -m venv .venv`, then `source .venv/bin/activate`
 1. Install dependencies: `pip install -r requirements.txt`
 1. Copy `example.config.yml` to a new file `config.yml`. Within it,
     - Change the value of `BOT_TOKEN` to your bot token from the Discord Developer Portal
@@ -50,7 +49,7 @@ To use the bot, type `$hug <left> <right>`, replacing `<left>` and `<right>` wit
 ```
 If there is at least one user mention/other user string in the hug, the bot will allow or deny user hugs based on your `REQUIRE_USER_HUG` config setting described above.
 
-It's also pretty easy to add more flags to the bot by dropping a square png image of the flag into the `flags/` directory. If you want to define an alias, do that within `main.py`. The bot will take care of the rest!
+It's also pretty easy to add more flags to the bot by dropping a square png image of the flag into the `flags/` directory. If you want to define an alias, do that within `util.py`. The bot will take care of the rest!
 
 ## Licenses
 Images created by hugmaker are derivatives of ["People Hugging" (1fac2)](https://abs.twimg.com/emoji/v2/svg/1fac2.svg) by [Twitter, Inc](https://twemoji.twitter.com/), used under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

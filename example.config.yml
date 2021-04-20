@@ -4,7 +4,7 @@ BOT_VERSION: v1.0.0
 
 BOT_TOKEN: YOUR_TOKEN_HERE
 
-PREFIX: $
+PREFIX: "$"
 
 MUSIC: # List of music you want the bot to have in its status (format: "Listening to ___")
   - My mixtape

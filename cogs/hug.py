@@ -15,8 +15,8 @@ class Hug(commands.Cog):
     userhug = config['REQUIRE_USER_HUG'] # checks if user hug requirement is enabled
 
     # define the color for each of the people in the hug
-    lightblue = np.array([238, 172, 85, 255], dtype = 'uint16')
-    darkblue = np.array([153, 102, 34, 255], dtype = 'uint16')
+    lightblue = np.array([238, 172, 85, 255], dtype = np.uint8)
+    darkblue = np.array([153, 102, 34, 255], dtype = np.uint8)
 
     # define a member converter class which returns a flag if it in the list ...
     # otherwise it searches for a member using the parameter info.
