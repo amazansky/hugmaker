@@ -16,7 +16,14 @@ class Help(commands.Cog):
     async def help(self, ctx):
         em = discord.Embed(title='Help', description=f'Use {self.prefix}help `command` for more information about specific commands, replacing `command` with the name of a command below.', color=ctx.author.color)
         em.add_field(name='Emote commands', value='hug, make')
-        em.add_field(name='Bot info', value='about, flags')
+        em.add_field(name='Bot info', value='about, flag, flags')
+        await ctx.send(embed=em)
+
+    @help.command()
+    async def flag(self, ctx):
+        em = discord.Embed(title='Flag', description='Sends more information about a specific pride flag')
+        em.add_field(name='Syntax', value=f'{self.prefix}flag `name`')
+        em.add_field(name='Parameters', value=f'`name` should be replaced by the name of a pride flag.')
         await ctx.send(embed=em)
 
     @help.command()

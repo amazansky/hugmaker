@@ -10,9 +10,7 @@ import urllib
 from util import aliases, config, flagset
 
 class Emoji(commands.Cog):
-    memo = {}
-
-    async def findmost(self, em, unicode_key): # find the color that appears most in the emoji
+    async def findmost(self, em): # find the color that appears most in the emoji
         a = cv.resize(em, (128, 128)) # scale down emoji for finding color
 
         a2D = a.reshape(-1,a.shape[-1])
@@ -37,23 +35,34 @@ class Emoji(commands.Cog):
     async def make(self, ctx, e, flag, *, options=''):
         # send notice about any unrecognized options. currently only blur is recognized.
         options = options.split()
-        unrecog = ['`' + o + '`' for o in options if o != 'blur']
+        recognized = {'blur'}
+        unrecog = ['`' + o + '`' for o in options if o not in recognized]
         if unrecog:
             await ctx.send(f'Warning: Unrecognized option(s): {", ".join(unrecog)}.')
 
-        e = e.encode('utf-8')
-        e = e[:-3] if e.endswith(b'\xef\xb8\x8f') else e # remove variation selector 16 if present
-        e = e.decode('utf-8')
-
-        # TODO: download/cache svg files
+        # TODO: download/cache svg files to avoid requesting twice
         unicode = '-'.join([f'{ord(utf):x}' for utf in e])
         req = urllib.request.Request(f'https://twemoji.maxcdn.com/v/latest/svg/{unicode}.svg', headers={'User-Agent' : 'Magic Browser'})
 
         try:
             con = urllib.request.urlopen(req)
-        except urllib.error.HTTPError:
-            await ctx.send('Error: The character you used is not a recognized emoji.')
-            return
+        except urllib.error.HTTPError: # try version without fe0f at the end because twemoji is inconsistent
+            e = e.encode('utf-8')
+            e2 = e[:-3] if e.endswith(b'\xef\xb8\x8f') else e # remove variation selector 16 if present
+            e2 = e2.decode('utf-8')
+
+            if e == e2: # there was no variation selector at the end
+                await ctx.send('Error: The character you used is not a recognized emoji.')
+                return
+
+            unicode = '-'.join([f'{ord(utf):x}' for utf in e2])
+            req = urllib.request.Request(f'https://twemoji.maxcdn.com/v/latest/svg/{unicode}.svg', headers={'User-Agent' : 'Magic Browser'})
+
+            try:
+                con = urllib.request.urlopen(req)
+            except urllib.error.HTTPError:
+                await ctx.send('Error: The character you used is not a recognized emoji.')
+                return
 
         imgbytes = cairosvg.svg2png(bytestring=bytes(con.read()), output_width=2048, output_height=2048)
 
@@ -68,7 +77,7 @@ class Emoji(commands.Cog):
             await ctx.send(f'Error: One or more of the flags you entered is not currently supported.')
             return
 
-        most = await self.findmost(emoji, unicode)
+        most = await self.findmost(emoji)
         emoji_mask = cv.inRange(emoji, most, most)
 
         indices = np.where(emoji_mask == [255])

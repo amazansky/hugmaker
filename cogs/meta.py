@@ -9,6 +9,7 @@ class Meta(commands.Cog):
         self.bot = bot
 
     ops = config['BOT_OPS']
+    prefix = config['PREFIX']
 
     # set listening status to a random song from config
     @commands.Cog.listener()
@@ -52,7 +53,20 @@ class Meta(commands.Cog):
         abbr, full = choice(list(aliases.items()))
         em = discord.Embed(title='Pride flags', description=f'This is the full list of flags supported by the bot. Shortened names also work (e.g. \"{abbr}\" for \"{full}\").')
         em.add_field(name='Full list', value=', '.join(sorted(flagset)))
+        em.add_field(name='More info', value=f'Run {self.prefix}flag `name` for more information on a specific pride flag.', inline=False)
         await ctx.send(embed=em)
+
+    @commands.command()
+    async def flag(self, ctx, flag):
+        full = flag if flag not in aliases else aliases[flag]
+        if full in flagset:
+            aliases_for_full = [alias for alias in aliases if aliases[alias] == full]
+            em = discord.Embed(title=f'Pride flag: {full.title()}')
+            em.set_thumbnail(url=f'https://raw.githubusercontent.com/amazansky/hugmaker/main/flags/{full}.png')
+            em.add_field(name='Short name(s)', value=', '.join(aliases_for_full) or '(None)')
+            await ctx.send(embed=em)
+        else:
+            await ctx.send('Error: The flag you entered was not recognized.')
 
     @commands.command()
     async def about(self, ctx):
