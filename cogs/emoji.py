@@ -10,7 +10,7 @@ import urllib
 from util import aliases, config, flagset
 
 class Emoji(commands.Cog):
-    async def findmost(self, em): # find the color that appears most in the emoji
+    async def findmost(self, em, *cmd_options): # find the color that appears most in the emoji
         a = cv.resize(em, (128, 128)) # scale down emoji for finding color
 
         a2D = a.reshape(-1,a.shape[-1])
@@ -25,17 +25,19 @@ class Emoji(commands.Cog):
                 results[x] += 1
 
         del results[0] # remove transparent pixels from most frequent color list
+
+        if 'inv' in cmd_options: # delete the most frequent color. return the second-most for inverse effect
+           del results[max(results, key=lambda x: results[x])]
+
         a_max = max(results, key=lambda x: results[x])
-
         unr = np.unravel_index(a_max, col_range)
-
         return np.array(unr)
 
     @commands.command()
     async def make(self, ctx, e, flag, *, options=''):
         # send notice about any unrecognized options. currently only blur is recognized.
         options = options.split()
-        recognized = {'blur'}
+        recognized = {'blur', 'inv'}
         unrecog = ['`' + o + '`' for o in options if o not in recognized]
         if unrecog:
             await ctx.send(f'Warning: Unrecognized option(s): {", ".join(unrecog)}.')
@@ -77,13 +79,20 @@ class Emoji(commands.Cog):
             await ctx.send(f'Error: One or more of the flags you entered is not currently supported.')
             return
 
-        most = await self.findmost(emoji)
+        most = await self.findmost(emoji, *options)
         emoji_mask = cv.inRange(emoji, most, most)
 
         indices = np.where(emoji_mask == [255])
 
-        # get y coordinate of first and last pixel of the color
-        first, last = indices[0][0], indices[0][-1]
+        try:
+            # get y coordinate of first and last pixel of the color
+            first, last = indices[0][0], indices[0][-1]
+        except IndexError: # there are no colors to index. it likely means user tried to inverse an emoji with only one color.
+            if 'inv' in options:
+                await ctx.send('Error: The emoji you entered only has one color, so an inverse cannot be produced.')
+                return
+            else:
+                raise
 
         # TODO: don't hardcode 2048
         flagarea = np.zeros((2048, 2048, 4), dtype=np.uint8)

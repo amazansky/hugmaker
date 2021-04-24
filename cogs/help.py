@@ -48,8 +48,13 @@ class Help(commands.Cog):
     @help.command()
     async def make(self, ctx):
         em = discord.Embed(title='Make', description='Creates a pride flag emote from a specified emoji')
-        em.add_field(name='Syntax', value=f'{self.prefix}make `emoji` `flag`')
-        em.add_field(name='Parameters', value=f'`emoji` should be replaced by an emoji character, and `flag` should be replaced by the name of a pride flag. *(Run `{self.prefix}flags` for a full list.)*')
+        em.add_field(name='Syntax', value=f'{self.prefix}make `emoji` `flag` `[options]`')
+        em.add_field(name='Parameters', value=f'`emoji` should be replaced by an emoji character.\n`flag` should be replaced by the name of a pride flag. *(Run `{self.prefix}flags` for a full list.)*', inline=False)
+        em.add_field(
+            name='Options',
+            value='Replace `[options]` with any number of the following to modify the behavior of hugmaker\'s emoji generation:\n- `blur` to blur the flag\n- `inv` to generate an inverse version of the emoji',
+            inline=False
+        )
         await ctx.send(embed=em)
 
 def setup(bot):
