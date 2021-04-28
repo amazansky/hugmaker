@@ -21,6 +21,7 @@ To use the bot, type `$hug <left> <right>`, replacing `<left>` and `<right>` wit
 - achillean
 - agender
 - ally
+- aroace
 - aromantic (alias: aro)
 - asexual (alias: ace)
 - bigender
