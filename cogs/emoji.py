@@ -3,7 +3,6 @@ from discord.ext import commands
 import cairosvg
 import cv2 as cv
 import numpy as np
-import os
 import pathlib
 import urllib
 

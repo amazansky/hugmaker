@@ -5,7 +5,7 @@ import numpy as np
 import pathlib
 import urllib
 
-from util import aliases, config, flagset
+from util import aliases, config, flagset, rotate
 
 class Hug(commands.Cog):
     def __init__(self, bot):
@@ -48,14 +48,6 @@ class Hug(commands.Cog):
 
             mask1 = cv.inRange(img, self.darkblue, self.darkblue)
             mask2 = cv.inRange(img, self.lightblue, self.lightblue)
-
-            # define a rotate function to rotate the flag for person 2
-            def rotate(img, angle, scale=1.0):
-                (height,width) = img.shape[:2]
-                point = (width // 2, height // 2)
-                matrix = cv.getRotationMatrix2D(point, angle, scale)
-                dimensions = (width, height)
-                return cv.warpAffine(img, matrix, dimensions)
 
             pflags = []
             for p in left[0], right[0]:

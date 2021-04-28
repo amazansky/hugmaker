@@ -31,9 +31,15 @@ async def load(ctx, ext):
 
 @bot.command()
 @commands.is_owner()
-async def reload(ctx, ext):
-    bot.reload_extension(f'cogs.{ext}')
-    await ctx.message.add_reaction('\U00002705')
+async def reload(ctx, ext=''):
+    if ext != '': # reload specific cog
+        bot.reload_extension(f'cogs.{ext}')
+        await ctx.message.add_reaction('\U00002705')
+    else: # reload all cogs
+        for filename in os.listdir('cogs'):
+            if filename.endswith('.py'):
+                bot.reload_extension(f'cogs.{filename[:-3]}')
+        await ctx.message.add_reaction('\U00002611') # different check mark emoji
 
 @bot.command()
 @commands.is_owner()
