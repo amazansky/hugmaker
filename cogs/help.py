@@ -5,9 +5,6 @@ from random import choice
 from util import config
 
 class Help(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
     prefix = config['PREFIX']
     ops = config['BOT_OPS']
 
@@ -15,8 +12,14 @@ class Help(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def help(self, ctx):
         em = discord.Embed(title='Help', description=f'Use {self.prefix}help `command` for more information about specific commands, replacing `command` with the name of a command below.', color=ctx.author.color)
-        em.add_field(name='Emote commands', value='hug, make')
+        em.add_field(name='Emote commands', value='gaysper, hug, make')
         em.add_field(name='Bot info', value='about, flag, flags')
+        await ctx.send(embed=em)
+
+    @help.command()
+    async def about(self, ctx):
+        em = discord.Embed(title='About', description='Sends information about the bot')
+        em.add_field(name='Syntax', value=f'{self.prefix}about')
         await ctx.send(embed=em)
 
     @help.command()
@@ -33,16 +36,17 @@ class Help(commands.Cog):
         await ctx.send(embed=em)
 
     @help.command()
-    async def about(self, ctx):
-        em = discord.Embed(title='About', description='Sends information about the bot')
-        em.add_field(name='Syntax', value=f'{self.prefix}about')
+    async def gaysper(self, ctx):
+        em = discord.Embed(title='Flag', description='Sends a pride flag Gaysper (ghost) emote')
+        em.add_field(name='Syntax', value=f'{self.prefix}gaysper `body` `[outline]`')
+        em.add_field(name='Parameters', value=f'`body` should be replaced by the name of a pride flags. Optionally, `[outline]` can also be replaced with the name of a pride flag. *(Run `{self.prefix}flags` for a full list.)*')
         await ctx.send(embed=em)
 
     @help.command()
     async def hug(self, ctx):
         em = discord.Embed(title='Hug', description='Sends a hug emote where the people are pride flags')
-        em.add_field(name='Syntax', value=f'{self.prefix}hug `flag1` `flag2`')
-        em.add_field(name='Parameters', value=f'`flag1` and `flag2` should be replaced by the names of pride flags. *(Run `{self.prefix}flags` for a full list.)*')
+        em.add_field(name='Syntax', value=f'{self.prefix}hug `left` `right`')
+        em.add_field(name='Parameters', value=f'`left` and `right` should be replaced by the names of pride flags. *(Run `{self.prefix}flags` for a full list.)*')
         await ctx.send(embed=em)
 
     @help.command()
