@@ -26,6 +26,7 @@ To use the bot, type `$hug <left> <right>`, replacing `<left>` and `<right>` wit
 - asexual (alias: ace)
 - bigender
 - bisexual (alias: bi)
+- boyflux
 - demiboy
 - demigirl
 - demiromantic (alias: demiro)
@@ -34,6 +35,7 @@ To use the bot, type `$hug <left> <right>`, replacing `<left>` and `<right>` wit
 - genderfluid (alias: fluid)
 - genderflux (alias: flux)
 - genderqueer
+- girlflux
 - graysexual (alias: gray, grayce)
 - grayromantic (alias: grayro)
 - intersex

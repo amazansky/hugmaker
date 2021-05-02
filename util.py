@@ -15,6 +15,7 @@ aliases = {
     'demiro': 'demiromantic',
     'enby': 'nonbinary',
     'fluid': 'genderfluid',
+    'flux': 'genderflux',
     'gray': 'graysexual',
     'grayce': 'graysexual',
     'grayro': 'grayromantic',
