@@ -48,7 +48,9 @@ To use the bot, type `$hug <left> <right>`, replacing `<left>` and `<right>` wit
 - pride
 - sapphic
 - toric
+- transfeminine (alias: transfem)
 - transgender (alias: trans)
+- transmasculine (alias: transmasc)
 - trixic
 ```
 If there is at least one user mention/other user string in the hug, the bot will allow or deny user hugs based on your `REQUIRE_USER_HUG` config setting described above.

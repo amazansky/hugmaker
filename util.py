@@ -24,7 +24,9 @@ aliases = {
     'omni': 'omnisexual',
     'pan': 'pansexual',
     'poly': 'polysexual',
-    'trans': 'transgender'
+    'trans': 'transgender',
+    'transfem': 'transfeminine',
+    'transmasc': 'transmasculine'
 }
 
 # access config file
