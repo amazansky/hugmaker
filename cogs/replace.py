@@ -4,7 +4,7 @@ import cv2 as cv
 import numpy as np
 import pathlib
 
-from util import aliases, flagset, rotate
+from util import aliases, flagset
 
 class Replace(commands.Cog):
     async def generic_replace(self, img, color, full_flag): # TODO: kwargs for rotation amt, scale    
@@ -46,7 +46,6 @@ class Replace(commands.Cog):
         output_path = f'output/gaysper_{fulls[0]}{output2}.png'
 
         if not pathlib.Path(output_path).exists(): # memoize gaysper generation
-            pathlib.Path('output').mkdir(exist_ok=True) # create output directory if it doesn't exist already
             img = cv.imread(f'images/gaysper.png', cv.IMREAD_UNCHANGED)
             replaced = await self.generic_replace(img, [51, 51, 51, 255], fulls[0])
 

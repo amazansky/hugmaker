@@ -1,9 +1,10 @@
-import discord
 from discord.ext import commands
 import os
-from random import choice
 
 from util import config
+
+bot = commands.Bot(command_prefix=config['PREFIX'])
+bot.remove_command('help')
 
 if 'SENTRY_DSN' in config: # activate Sentry reporting if enabled
     from discord_sentry_reporting import use_sentry
@@ -14,9 +15,6 @@ if 'SENTRY_DSN' in config: # activate Sentry reporting if enabled
         traces_sample_rate = 1.0,
         environment = config['ENV_NAME']
     )
-
-bot = commands.Bot(command_prefix=config['PREFIX'])
-bot.remove_command('help')
 
 # load all cogs
 for filename in os.listdir('cogs'):

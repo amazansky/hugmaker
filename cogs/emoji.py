@@ -3,10 +3,9 @@ from discord.ext import commands
 import cairosvg
 import cv2 as cv
 import numpy as np
-import pathlib
 import urllib
 
-from util import aliases, config, flagset
+from util import aliases, flagset
 
 class Emoji(commands.Cog):
     async def findmost(self, em, *cmd_options): # find the color that appears most in the emoji
@@ -125,9 +124,6 @@ class Emoji(commands.Cog):
         final = cv.bitwise_or(other, masked)
 
         resized = cv.resize(final, (512, 512), interpolation=cv.INTER_AREA)
-
-        # create output directory if it doesn't exist already
-        pathlib.Path('output').mkdir(exist_ok=True)
 
         cv.imwrite('output/emoji.png', resized)
         await ctx.send(file=discord.File('output/emoji.png'))

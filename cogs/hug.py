@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import cv2 as cv
 import numpy as np
-import pathlib
 import urllib
 
 from util import aliases, config, flagset, rotate
@@ -85,9 +84,6 @@ class Hug(commands.Cog):
 
             # downscale for anti-aliasing. INTER_AREA worked the best out of the methods I tried.
             resized = cv.resize(people, (512, 512), interpolation=cv.INTER_AREA)
-
-            # create output directory if it doesn't exist already
-            pathlib.Path('output').mkdir(exist_ok=True)
 
             cv.imwrite('output/hug.png', resized)
             await ctx.send(file=discord.File('output/hug.png'))
