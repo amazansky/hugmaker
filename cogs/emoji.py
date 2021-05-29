@@ -33,9 +33,9 @@ class Emoji(commands.Cog):
 
     @commands.command()
     async def make(self, ctx, e, flag, *, options=''):
-        # send notice about any unrecognized options. currently only blur is recognized.
+        # send notice about any unrecognized options
         options = options.split()
-        recognized = {'blur', 'inv'}
+        recognized = {'blur', 'inv', 'sm'}
         unrecog = ['`' + o + '`' for o in options if o not in recognized]
         if unrecog:
             await ctx.send(f'Warning: Unrecognized option(s): {", ".join(unrecog)}.')
@@ -123,7 +123,8 @@ class Emoji(commands.Cog):
 
         final = cv.bitwise_or(other, masked)
 
-        resized = cv.resize(final, (512, 512), interpolation=cv.INTER_AREA)
+        size = 48 if 'sm' in options else 512
+        resized = cv.resize(final, (size, size), interpolation=cv.INTER_AREA)
 
         cv.imwrite('output/emoji.png', resized)
         await ctx.send(file=discord.File('output/emoji.png'))
