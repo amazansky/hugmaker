@@ -40,6 +40,7 @@ To use the bot, type `$hug <left> <right>`, replacing `<left>` and `<right>` wit
 - grayromantic (alias: grayro)
 - intersex
 - lesbian (alias: les)
+- neptunic
 - nonbinary (aliases: enby, nb)
 - omnisexual (alias: omni)
 - pansexual (alias: pan)
@@ -52,6 +53,7 @@ To use the bot, type `$hug <left> <right>`, replacing `<left>` and `<right>` wit
 - transgender (alias: trans)
 - transmasculine (alias: transmasc)
 - trixic
+- uranic
 ```
 If there is at least one user mention/other user string in the hug, the bot will allow or deny user hugs based on your `REQUIRE_USER_HUG` config setting described above.
 
